@@ -25,6 +25,7 @@
   border-radius: var(--radius-sm);
   font-size: 13px;
   color: var(--muted);
+  text-decoration: none;
   transition: background 0.15s, color 0.15s;
 }
 .navBtn:hover { background: var(--surface2); color: var(--text); }

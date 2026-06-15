@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import Link from 'next/link'
 import Intake from '@/components/Intake'
 import Review from '@/components/Review'
 import Learn from '@/components/Learn'
@@ -76,6 +77,9 @@ export default function Home() {
           >
             KB
           </button>
+          <Link href="/resources" className={styles.navBtn}>
+            Resources
+          </Link>
         </nav>
       </header>
 

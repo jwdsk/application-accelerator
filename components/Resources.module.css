@@ -1,0 +1,311 @@
+/* ── Shell ─────────────────────────────────────────────────────────────────── */
+.shell { min-height: 100vh; display: flex; flex-direction: column; }
+
+.header {
+  background: var(--surface);
+  border-bottom: 0.5px solid var(--border2);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo { font-weight: 600; font-size: 15px; }
+.logo span { color: var(--purple); font-weight: 400; }
+
+.nav { display: flex; gap: 4px; align-items: center; }
+
+.backLink {
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  margin-right: 8px;
+  border-right: .5px solid var(--border);
+  padding-right: 16px;
+  transition: color 0.15s;
+}
+.backLink:hover { color: var(--text); }
+
+.navBtn {
+  background: none;
+  border: none;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.navBtn:hover { background: var(--surface2); color: var(--text); }
+.navBtn.active { background: var(--purple-bg); color: var(--purple-text); font-weight: 500; }
+
+.main { flex: 1; padding: 32px 24px; max-width: 820px; margin: 0 auto; width: 100%; }
+
+/* ── Section header ─────────────────────────────────────────────────────────── */
+.sectionHead { margin-bottom: 22px; }
+.sectionTitle { font-size: 18px; font-weight: 500; margin-bottom: 4px; }
+.sectionSub { font-size: 13px; color: var(--muted); }
+
+.loading { color: var(--muted); font-size: 13px; padding: 20px 0; }
+.empty {
+  color: var(--muted);
+  font-size: 13px;
+  padding: 24px;
+  text-align: center;
+  background: var(--surface2);
+  border-radius: var(--radius);
+  border: .5px solid var(--border);
+  margin-bottom: 14px;
+}
+
+/* ── Documents ──────────────────────────────────────────────────────────────── */
+.dropZone {
+  border: 1.5px dashed var(--border2);
+  border-radius: var(--radius);
+  padding: 32px;
+  text-align: center;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 13px;
+  transition: border-color .15s, background .15s;
+  margin-bottom: 12px;
+}
+.dropZone:hover { border-color: var(--purple); background: var(--purple-bg); }
+.hasFile { border-color: var(--teal); background: var(--teal-bg); color: var(--teal-text); }
+.removeFile { background: none; border: none; color: var(--muted); margin-left: 8px; font-size: 12px; cursor: pointer; }
+
+.uploadRow { display: flex; gap: 8px; margin-bottom: 24px; }
+.alertError { background: var(--red-bg); color: var(--red); padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 12px; }
+
+.blobList { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+
+.blobCard {
+  background: var(--surface);
+  border: .5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.blobInfo { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.blobName { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 420px; }
+.blobMeta { display: flex; gap: 10px; align-items: center; }
+.blobDate { font-size: 12px; color: var(--muted); }
+.blobSize { font-size: 12px; color: var(--hint); }
+
+.badge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  background: var(--purple-bg);
+  color: var(--purple-text);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.blobActions { display: flex; gap: 6px; flex-shrink: 0; }
+
+.btnView {
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  border: .5px solid var(--border2);
+  color: var(--text);
+  text-decoration: none;
+  background: none;
+  transition: border-color .1s, color .1s;
+  white-space: nowrap;
+}
+.btnView:hover { border-color: var(--purple); color: var(--purple-text); }
+
+.btnDelete {
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  border: .5px solid var(--border2);
+  color: var(--muted);
+  cursor: pointer;
+  background: none;
+  transition: color .1s, border-color .1s;
+  white-space: nowrap;
+}
+.btnDelete:hover { color: var(--red); border-color: var(--red); }
+
+/* ── Canned Q&A ─────────────────────────────────────────────────────────────── */
+.cannedList { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+
+.cannedCard {
+  background: var(--surface);
+  border: .5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  padding-right: 72px;
+  position: relative;
+  transition: border-color .15s;
+}
+.cannedCardActive { border-color: var(--purple); }
+
+.deleteCannedBtn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: .5px solid var(--border2);
+  color: var(--muted);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color .1s, border-color .1s;
+}
+.deleteCannedBtn:hover { color: var(--red); border-color: var(--red); }
+
+.cannedQ {
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 7px;
+  padding: 3px 5px;
+  margin-left: -5px;
+  border-radius: 4px;
+  cursor: text;
+  transition: background .1s;
+  line-height: 1.4;
+}
+.cannedQ:hover { background: var(--surface2); }
+
+.cannedA {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  padding: 3px 5px;
+  margin-left: -5px;
+  border-radius: 4px;
+  cursor: text;
+  transition: background .1s;
+}
+.cannedA:hover { background: var(--surface2); }
+
+.placeholder { color: var(--hint); font-style: italic; font-weight: 400; }
+
+.inlineInput {
+  display: block;
+  width: 100%;
+  padding: 4px 6px;
+  border: 1.5px solid var(--purple);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 7px;
+}
+.inlineInput:focus { outline: none; }
+
+.inlineTextarea {
+  display: block;
+  width: 100%;
+  padding: 6px 8px;
+  border: 1.5px solid var(--purple);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.6;
+  resize: vertical;
+  font-family: inherit;
+}
+.inlineTextarea:focus { outline: none; }
+
+.btnAddNew {
+  display: block;
+  width: 100%;
+  background: none;
+  border: 1.5px dashed var(--border2);
+  color: var(--muted);
+  font-size: 13px;
+  padding: 14px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+  text-align: center;
+}
+.btnAddNew:hover { border-color: var(--purple); color: var(--purple-text); }
+
+.addForm {
+  background: var(--surface2);
+  border: .5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.addFormBtns { display: flex; gap: 8px; }
+
+/* ── Company Profile ────────────────────────────────────────────────────────── */
+.profileGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.fullWidth { grid-column: 1 / -1; }
+.saveRow { margin-top: 24px; display: flex; justify-content: flex-end; }
+
+/* ── Shared form elements ───────────────────────────────────────────────────── */
+.field { display: flex; flex-direction: column; gap: 5px; }
+.label { font-size: 12px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+
+.input {
+  width: 100%;
+  padding: 9px 11px;
+  border: .5px solid var(--border2);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+}
+.input:focus { outline: none; border-color: var(--purple); }
+
+.textarea {
+  width: 100%;
+  padding: 9px 11px;
+  border: .5px solid var(--border2);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  resize: vertical;
+  line-height: 1.5;
+  font-family: inherit;
+}
+.textarea:focus { outline: none; border-color: var(--purple); }
+
+/* ── Buttons ────────────────────────────────────────────────────────────────── */
+.btnPrimary {
+  background: var(--purple);
+  color: white;
+  border: none;
+  padding: 10px 22px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.btnPrimary:disabled { opacity: .5; cursor: not-allowed; }
+
+.btnSecondary {
+  background: none;
+  border: .5px solid var(--border2);
+  color: var(--text);
+  padding: 9px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  cursor: pointer;
+}
