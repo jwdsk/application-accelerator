@@ -1,21 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client'
-import { del } from '@vercel/blob'
+import { list, del } from '@vercel/blob'
 import { deleteDoc, getDocs } from '@/lib/kv'
 
 export const maxDuration = 60
 
 export async function GET() {
   try {
-    const docs = await getDocs()
-    const blobs = docs.map(d => ({
+    // Merge KV index (has extracted text) with live Blob list (catches files
+    // uploaded outside the app or before onUploadCompleted ran).
+    const [kvDocs, { blobs: blobList }] = await Promise.all([getDocs(), list()])
+
+    const kvByUrl = new Map(kvDocs.map(d => [d.url, d]))
+
+    // KV entries first (they have text), then any Blob-only files not yet indexed
+    const fromKV = kvDocs.map(d => ({
       pathname: d.title,
       url: d.url,
       uploadedAt: d.uploadedAt,
       size: d.size ?? 0,
       contentType: d.contentType ?? 'application/octet-stream',
     }))
-    return NextResponse.json({ blobs })
+
+    const fromBlobOnly = blobList
+      .filter(b => !kvByUrl.has(b.url))
+      .map(b => ({
+        pathname: b.pathname,
+        url: b.url,
+        uploadedAt: b.uploadedAt,
+        size: b.size,
+        contentType: b.contentType,
+      }))
+
+    return NextResponse.json({ blobs: [...fromKV, ...fromBlobOnly] })
   } catch (err: any) {
     console.error('Doc list error:', err)
     return NextResponse.json({ error: err.message }, { status: 500 })
