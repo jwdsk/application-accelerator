@@ -3,6 +3,7 @@ import { useState } from 'react'
 import Intake from '@/components/Intake'
 import Review from '@/components/Review'
 import Learn from '@/components/Learn'
+import KB from '@/components/KB'
 import styles from './page.module.css'
 
 export type Question = {
@@ -24,7 +25,7 @@ export type AppState = {
   questions: Question[]
 }
 
-type View = 'intake' | 'review' | 'learn'
+type View = 'intake' | 'review' | 'learn' | 'kb'
 
 export default function Home() {
   const [view, setView] = useState<View>('intake')
@@ -69,6 +70,12 @@ export default function Home() {
           >
             3. Learn
           </button>
+          <button
+            className={`${styles.navBtn} ${view === 'kb' ? styles.active : ''}`}
+            onClick={() => setView('kb')}
+          >
+            KB
+          </button>
         </nav>
       </header>
 
@@ -82,6 +89,7 @@ export default function Home() {
           </div>
         )}
         {view === 'learn' && <Learn currentApp={app} onReset={onReset} />}
+        {view === 'kb' && <KB />}
       </main>
     </div>
   )

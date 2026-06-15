@@ -41,7 +41,7 @@ export interface Question {
 
 export async function getProfile(): Promise<Record<string, string>> {
   const profile = await kv.get<Record<string, string>>('kb:profile')
-  return profile ?? DEFAULT_PROFILE
+  return profile ?? {}
 }
 
 export async function setProfile(profile: Record<string, string>) {
@@ -52,7 +52,7 @@ export async function setProfile(profile: Record<string, string>) {
 
 export async function getCanned(): Promise<CannedEntry[]> {
   const entries = await kv.get<CannedEntry[]>('kb:canned')
-  return entries ?? DEFAULT_CANNED
+  return entries ?? []
 }
 
 export async function setCanned(entries: CannedEntry[]) {
@@ -109,44 +109,3 @@ export async function getFullKB() {
   return { corrected, canned, profile, docs: [] }
 }
 
-// ─── Defaults ─────────────────────────────────────────────────────────────────
-
-const DEFAULT_PROFILE: Record<string, string> = {
-  name: 'MetaPause',
-  tagline: 'AI-powered menopause care platform for women',
-  mission: 'To help women navigate perimenopause and menopause with personalized, science-backed AI support.',
-  stage: 'Pre-seed',
-  founded: '2023',
-  location: 'Remote',
-  product: 'A personalized AI companion that helps women track symptoms, understand hormonal changes, and access evidence-based guidance — through a subscription app and wellness store.',
-  market: 'The global menopause market is valued at $15B+ and growing. 1 billion women globally will be in menopause or perimenopause by 2025.',
-  traction: 'Early beta users, growing waitlist, strategic partnerships in development.',
-  revenueModel: 'Subscription (B2C app) + e-commerce (wellness products) + B2B licensing to HR platforms and health insurers.',
-  team: '3 co-founders with backgrounds in women\'s health, product, and AI.',
-  competition: 'We differ from Elektra, Gennev, and Midi by being AI-first, mobile-native, and accessible at a fraction of clinical cost.',
-  ask: 'Raising $500K pre-seed to build product, grow team, and reach 10K paying users.',
-  impact: 'Menopause is chronically under-researched and stigmatized. MetaPause democratizes access to care for women who cannot afford private menopause clinics.'
-}
-
-const DEFAULT_CANNED: CannedEntry[] = [
-  {
-    question: 'What problem are you solving?',
-    answer: 'Menopause affects 50% of the global population yet remains chronically under-researched and stigmatized. Women spend an average of 7 years in perimenopause with minimal clinical support, often dismissed by doctors. MetaPause provides an AI-powered companion that gives women personalized, evidence-based guidance through every stage of their hormonal journey — accessible 24/7, at a fraction of clinical cost.'
-  },
-  {
-    question: 'Why now?',
-    answer: 'Three tailwinds converge: (1) The menopause care market has reached mainstream awareness in the last 3 years, driven by celebrity advocacy and new research; (2) AI tooling is mature enough to deliver genuinely personalized health guidance; (3) The femtech funding ecosystem has expanded significantly, with dedicated women\'s health investors now active globally.'
-  },
-  {
-    question: 'What is your unfair advantage?',
-    answer: 'Our co-founding team combines lived experience of menopause, deep women\'s health research expertise, and product/AI engineering skills. We are building the data flywheel first — every interaction trains a model that gets better at predicting what women need before they know they need it.'
-  },
-  {
-    question: 'What do you need from this program?',
-    answer: 'We are looking for mentorship on clinical partnerships and regulatory pathways, introductions to women\'s health VCs and strategic health system partners, and office hours support on B2B GTM strategy.'
-  },
-  {
-    question: 'What is your social impact?',
-    answer: 'Menopause is one of the most universal yet most neglected health experiences. MetaPause directly addresses health equity — we are building care that is accessible to women regardless of income, geography, or whether their doctor takes their symptoms seriously.'
-  }
-]
