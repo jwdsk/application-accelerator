@@ -98,14 +98,50 @@ export async function listApplications(): Promise<Application[]> {
   return apps.filter(Boolean) as Application[]
 }
 
+// ─── Documents (Tier 3) ──────────────────────────────────────────────────────
+
+export interface DocEntry {
+  title: string
+  url: string
+  text: string
+  uploadedAt: string
+}
+
+export async function getDocs(): Promise<DocEntry[]> {
+  const index = await kv.get<string[]>('doc:index') ?? []
+  if (index.length === 0) return []
+  const docs = await Promise.all(index.map(url => kv.get<DocEntry>(`doc:${url}`)))
+  return docs.filter(Boolean) as DocEntry[]
+}
+
+export async function addDoc(doc: DocEntry): Promise<void> {
+  await kv.set(`doc:${doc.url}`, doc)
+  const index = await kv.get<string[]>('doc:index') ?? []
+  if (!index.includes(doc.url)) {
+    await kv.set('doc:index', [doc.url, ...index])
+  }
+}
+
+export async function deleteDoc(url: string): Promise<void> {
+  await kv.del(`doc:${url}`)
+  const index = await kv.get<string[]>('doc:index') ?? []
+  await kv.set('doc:index', index.filter(u => u !== url))
+}
+
 // ─── Full KB for prompt ───────────────────────────────────────────────────────
 
 export async function getFullKB() {
-  const [corrected, canned, profile] = await Promise.all([
+  const [corrected, canned, profile, docs] = await Promise.all([
     getCorrected(),
     getCanned(),
-    getProfile()
+    getProfile(),
+    getDocs(),
   ])
-  return { corrected, canned, profile, docs: [] }
+  return {
+    corrected,
+    canned,
+    profile,
+    docs: docs.map(d => ({ title: d.title, excerpt: d.text.slice(0, 3000) })),
+  }
 }
 

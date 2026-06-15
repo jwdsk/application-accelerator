@@ -83,6 +83,27 @@
 .uploadRow { display: flex; gap: 8px; margin-bottom: 24px; }
 .alertError { background: var(--red-bg); color: var(--red); padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 12px; }
 
+.dropZoneProcessing { cursor: default; border-color: var(--purple); background: var(--purple-bg); }
+.processingLabel { display: flex; align-items: center; gap: 8px; color: var(--purple-text); }
+
+.uploadSuccess {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--teal-bg);
+  border: .5px solid var(--teal);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-bottom: 20px;
+}
+.uploadSuccessIcon { font-size: 20px; color: var(--teal-text); font-weight: 600; flex-shrink: 0; }
+.uploadSuccessTitle { font-size: 13px; font-weight: 500; color: var(--teal-text); }
+.uploadSuccessFile { font-size: 12px; color: var(--teal); margin-top: 2px; }
+.uploadSuccess .btnSecondary { margin-left: auto; flex-shrink: 0; }
+
+.spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid rgba(83,74,183,.3); border-top-color: var(--purple); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
 .blobList { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
 
 .blobCard {

@@ -57,7 +57,8 @@ export default function Resources() {
   const [blobs, setBlobs] = useState<BlobFile[]>([])
   const [blobsLoading, setBlobsLoading] = useState(true)
   const [uploadFile, setUploadFile] = useState<File | null>(null)
-  const [uploading, setUploading] = useState(false)
+  const [uploadStage, setUploadStage] = useState<'idle' | 'processing' | 'done' | 'error'>('idle')
+  const [uploadedName, setUploadedName] = useState('')
   const [uploadError, setUploadError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -119,7 +120,8 @@ export default function Resources() {
 
   async function uploadDoc() {
     if (!uploadFile) return
-    setUploading(true)
+    const name = uploadFile.name
+    setUploadStage('processing')
     setUploadError('')
     const fd = new FormData()
     fd.append('file', uploadFile)
@@ -128,12 +130,24 @@ export default function Resources() {
       if (!res.ok) {
         const d = await res.json()
         setUploadError(d.error || 'Upload failed.')
+        setUploadStage('error')
       } else {
         setUploadFile(null)
+        setUploadedName(name)
+        setUploadStage('done')
         await loadBlobs()
       }
-    } catch { setUploadError('Upload failed. Please try again.') }
-    setUploading(false)
+    } catch {
+      setUploadError('Upload failed. Please try again.')
+      setUploadStage('error')
+    }
+  }
+
+  function resetUpload() {
+    setUploadStage('idle')
+    setUploadFile(null)
+    setUploadError('')
+    setUploadedName('')
   }
 
   async function deleteBlob(url: string) {
@@ -228,42 +242,57 @@ export default function Resources() {
               <p className={styles.sectionSub}>Upload PDFs, Word docs, and text files to your knowledge base.</p>
             </div>
 
-            <div
-              className={`${styles.dropZone} ${uploadFile ? styles.hasFile : ''}`}
-              onClick={() => fileRef.current?.click()}
-              onDragOver={e => e.preventDefault()}
-              onDrop={e => {
-                e.preventDefault()
-                const f = e.dataTransfer.files[0]
-                if (f) setUploadFile(f)
-              }}
-            >
-              {uploadFile ? (
-                <span>
-                  {uploadFile.name}{' '}
-                  <button className={styles.removeFile} onClick={e => { e.stopPropagation(); setUploadFile(null) }}>✕</button>
-                </span>
-              ) : (
-                <span>Drop PDF, DOCX, DOC, or TXT here, or click to browse</span>
-              )}
-              <input
-                ref={fileRef}
-                type="file"
-                accept=".pdf,.doc,.docx,.txt"
-                style={{ display: 'none' }}
-                onChange={e => e.target.files?.[0] && setUploadFile(e.target.files[0])}
-              />
-            </div>
-
-            {uploadError && <div className={styles.alertError}>{uploadError}</div>}
-
-            {uploadFile && (
-              <div className={styles.uploadRow}>
-                <button className={styles.btnPrimary} onClick={uploadDoc} disabled={uploading}>
-                  {uploading ? 'Uploading…' : 'Upload'}
-                </button>
-                <button className={styles.btnSecondary} onClick={() => setUploadFile(null)}>Cancel</button>
+            {uploadStage === 'done' ? (
+              <div className={styles.uploadSuccess}>
+                <span className={styles.uploadSuccessIcon}>✓</span>
+                <div>
+                  <div className={styles.uploadSuccessTitle}>Uploaded and indexed for AI drafting</div>
+                  <div className={styles.uploadSuccessFile}>{uploadedName}</div>
+                </div>
+                <button className={styles.btnSecondary} onClick={resetUpload}>Upload another</button>
               </div>
+            ) : (
+              <>
+                <div
+                  className={`${styles.dropZone} ${uploadFile ? styles.hasFile : ''} ${uploadStage === 'processing' ? styles.dropZoneProcessing : ''}`}
+                  onClick={() => uploadStage === 'idle' || uploadStage === 'error' ? fileRef.current?.click() : undefined}
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={e => {
+                    e.preventDefault()
+                    const f = e.dataTransfer.files[0]
+                    if (f) { resetUpload(); setUploadFile(f) }
+                  }}
+                >
+                  {uploadStage === 'processing' ? (
+                    <span className={styles.processingLabel}>
+                      <span className={styles.spinner} /> Uploading and extracting text…
+                    </span>
+                  ) : uploadFile ? (
+                    <span>
+                      {uploadFile.name}{' '}
+                      <button className={styles.removeFile} onClick={e => { e.stopPropagation(); setUploadFile(null) }}>✕</button>
+                    </span>
+                  ) : (
+                    <span>Drop PDF, DOCX, DOC, or TXT here, or click to browse</span>
+                  )}
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept=".pdf,.doc,.docx,.txt"
+                    style={{ display: 'none' }}
+                    onChange={e => { if (e.target.files?.[0]) { resetUpload(); setUploadFile(e.target.files[0]) } }}
+                  />
+                </div>
+
+                {uploadError && <div className={styles.alertError}>{uploadError}</div>}
+
+                {uploadFile && uploadStage !== 'processing' && (
+                  <div className={styles.uploadRow}>
+                    <button className={styles.btnPrimary} onClick={uploadDoc}>Upload</button>
+                    <button className={styles.btnSecondary} onClick={resetUpload}>Cancel</button>
+                  </div>
+                )}
+              </>
             )}
 
             {blobsLoading ? (
