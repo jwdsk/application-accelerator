@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       ? `\n\nOriginal questions for reference:\n${originalQuestions.map(q => `Q${q.num}: ${q.text}`).join('\n')}`
       : ''
 
-    const response = await anthropic.messages.create({
+    const response = await anthropic.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       max_tokens: 3000,
       messages: [{

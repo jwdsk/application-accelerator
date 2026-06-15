@@ -17,13 +17,14 @@ export async function POST(req: NextRequest) {
 
     // Draft all questions in one call for efficiency + prompt caching
     // Sonnet handles the drafting — quality matters here
-    const response = await anthropic.messages.create({
+    const response = await anthropic.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       max_tokens: 4000,
-      system: systemPrompt,
-      messages: [{
-        role: 'user',
-        content: `Draft answers for all ${questions.length} questions in this application: "${appName || 'Accelerator Application'}".
+      messages: [
+        { role: 'system', content: systemPrompt },
+        {
+          role: 'user',
+          content: `Draft answers for all ${questions.length} questions in this application: "${appName || 'Accelerator Application'}".
 
 Return ONLY a valid JSON array, no preamble, no markdown fences. Each item:
 {
@@ -40,7 +41,8 @@ Confidence guide:
 - Below 0.5: KB doesn't cover this well — flag it
 
 ${questions.map((q: any) => `Q${q.num}: ${q.text}${q.charLimit ? ` (${q.charLimit} char limit)` : ''}`).join('\n')}`
-      }]
+        }
+      ]
     })
 
     const raw = response.choices[0]?.message?.content ?? ''
