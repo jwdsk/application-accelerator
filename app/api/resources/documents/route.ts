@@ -29,7 +29,7 @@ export async function GET() {
         url: b.url,
         uploadedAt: b.uploadedAt,
         size: b.size,
-        contentType: b.contentType,
+        contentType: '',
       }))
 
     return NextResponse.json({ blobs: [...fromKV, ...fromBlobOnly] })
