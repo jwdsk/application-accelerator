@@ -62,6 +62,7 @@ export async function scrapeUrl(url: string): Promise<{ text: string; error?: st
 export async function extractPdf(buffer: Buffer): Promise<{ text: string; error?: string }> {
   try {
     // Dynamic import — pdf-parse has side effects at module level
+   // @ts-ignore
     const pdfParse = (await import('pdf-parse')).default
     const data = await pdfParse(buffer)
     if (!data.text || data.text.trim().length < 50) {
