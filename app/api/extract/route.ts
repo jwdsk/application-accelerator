@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Use Claude Haiku to extract and structure the questions
-    const response = await anthropic.messages.create({
+    const response = await anthropic.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       max_tokens: 2000,
       messages: [{
@@ -67,13 +67,8 @@ ${rawText.slice(0, 8000)}`
       }]
     })
 
-    const raw = response.content
-      .filter(b => b.type === 'text')
-      .map(b => b.text)
-      .join('')
-      .replace(/```json|```/g, '')
-      .trim()
-
+ const raw = response.choices[0]?.message?.content ?? ''
+ 
     let questions = []
     try {
       questions = JSON.parse(raw)

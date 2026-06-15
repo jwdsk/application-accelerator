@@ -43,13 +43,7 @@ ${questions.map((q: any) => `Q${q.num}: ${q.text}${q.charLimit ? ` (${q.charLimi
       }]
     })
 
-    const raw = response.content
-      .filter(b => b.type === 'text')
-      .map(b => b.text)
-      .join('')
-      .replace(/```json|```/g, '')
-      .trim()
-
+    const raw = response.choices[0]?.message?.content ?? ''
     let drafts = []
     try {
       drafts = JSON.parse(raw)

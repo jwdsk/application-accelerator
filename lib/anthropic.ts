@@ -1,6 +1,6 @@
-import Anthropic from '@anthropic-ai/sdk'
+import OpenAI from 'openai'
 
-export const anthropic = new Anthropic({
+export const anthropic = new OpenAI({
   apiKey: process.env.GROQ_API_KEY!,
   baseURL: 'https://api.groq.com/openai/v1',
 })

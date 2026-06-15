@@ -64,13 +64,7 @@ ${text.slice(0, 10000)}`
       }]
     })
 
-    const raw = response.content
-      .filter(b => b.type === 'text')
-      .map(b => b.text)
-      .join('')
-      .replace(/```json|```/g, '')
-      .trim()
-
+    const raw = response.choices[0]?.message?.content ?? ''
     let pairs: { question: string; answer: string }[] = []
     try {
       pairs = JSON.parse(raw)
