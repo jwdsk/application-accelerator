@@ -32,6 +32,9 @@ export default function KB() {
   const [newQ, setNewQ] = useState('')
   const [newA, setNewA] = useState('')
   const [cannedAdding, setCannedAdding] = useState(false)
+  const [editingIdx, setEditingIdx] = useState<number | null>(null)
+  const [editingAnswer, setEditingAnswer] = useState('')
+  const [editingSaving, setEditingSaving] = useState(false)
 
   const [seedFile, setSeedFile] = useState<File | null>(null)
   const [seedStage, setSeedStage] = useState<SeedStage>('idle')
@@ -91,6 +94,19 @@ export default function KB() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(filtered),
     })
+  }
+
+  async function saveEditedAnswer(idx: number) {
+    setEditingSaving(true)
+    const updated = canned.map((e, i) => i === idx ? { ...e, answer: editingAnswer } : e)
+    setCannedState(updated)
+    await fetch('/api/kb?type=canned', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updated),
+    })
+    setEditingIdx(null)
+    setEditingSaving(false)
   }
 
   async function handleSeed() {
@@ -170,10 +186,38 @@ export default function KB() {
         ) : (
           <div className={styles.cannedList}>
             {canned.map((entry, idx) => (
-              <div key={idx} className={styles.cannedEntry}>
-                <button className={styles.deleteBtn} onClick={() => deleteCannedEntry(idx)}>Delete</button>
+              <div key={idx} className={`${styles.cannedEntry} ${editingIdx === idx ? styles.cannedEntryEditing : ''}`}>
+                <div className={styles.cannedActions}>
+                  {editingIdx === idx ? (
+                    <>
+                      <button
+                        className={styles.saveInlineBtn}
+                        onClick={() => saveEditedAnswer(idx)}
+                        disabled={editingSaving}
+                      >
+                        {editingSaving ? 'Saving…' : 'Save'}
+                      </button>
+                      <button className={styles.cancelBtn} onClick={() => setEditingIdx(null)}>Cancel</button>
+                    </>
+                  ) : (
+                    <>
+                      <button className={styles.editBtn} onClick={() => { setEditingIdx(idx); setEditingAnswer(entry.answer) }}>Edit</button>
+                      <button className={styles.deleteBtn} onClick={() => deleteCannedEntry(idx)}>Delete</button>
+                    </>
+                  )}
+                </div>
                 <div className={styles.cannedQ}>{entry.question}</div>
-                <div className={styles.cannedA}>{entry.answer}</div>
+                {editingIdx === idx ? (
+                  <textarea
+                    className={styles.cannedEditTextarea}
+                    value={editingAnswer}
+                    onChange={e => setEditingAnswer(e.target.value)}
+                    rows={5}
+                    autoFocus
+                  />
+                ) : (
+                  <div className={styles.cannedA}>{entry.answer}</div>
+                )}
               </div>
             ))}
           </div>
