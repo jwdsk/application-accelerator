@@ -15,16 +15,7 @@ export async function POST(req: NextRequest) {
     const kb = await getFullKB()
     const systemPrompt = buildSystemPrompt(kb)
 
-    // Single call for all questions: sends the KB system prompt once instead of
-    // once per question, keeping total token usage within free-tier TPM limits.
-    const response = await anthropic.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
-      max_tokens: 6000,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        {
-          role: 'user',
-          content: `Draft answers for all ${questions.length} questions in this application: "${appName || 'Accelerator Application'}".
+    const userMessage = `Draft answers for all ${questions.length} questions in this application: "${appName || 'Accelerator Application'}".
 
 Return ONLY a valid JSON array, no preamble, no markdown fences. Each item:
 {
@@ -41,11 +32,32 @@ Confidence guide:
 - Below 0.5: KB doesn't cover this well — flag it
 
 ${questions.map((q: any) => `Q${q.num}: ${q.text}${q.charLimit ? ` (${q.charLimit} char limit)` : ''}`).join('\n')}`
-        }
-      ]
-    })
 
-    const raw = (response.choices[0]?.message?.content ?? '')
+    // Single call: sends the system prompt once for all questions.
+    // Retry up to 2 times on 429, honouring the retry-after header.
+    let response: Awaited<ReturnType<typeof anthropic.chat.completions.create>> | undefined
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        response = await anthropic.chat.completions.create({
+          model: 'llama-3.3-70b-versatile',
+          max_tokens: 4000,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userMessage },
+          ],
+        })
+        break
+      } catch (err: any) {
+        if (err?.status === 429 && attempt < 2) {
+          const waitSec = parseInt(err?.headers?.['retry-after'] ?? '30') + 2
+          await new Promise(r => setTimeout(r, waitSec * 1000))
+          continue
+        }
+        throw err
+      }
+    }
+
+    const raw = (response?.choices[0]?.message?.content ?? '')
       .replace(/```json\n?|```/g, '')
       .trim()
 
@@ -69,7 +81,7 @@ ${questions.map((q: any) => `Q${q.num}: ${q.text}${q.charLimit ? ` (${q.charLimi
       const draft = drafts.find((d: any) => d.num === q.num) ?? {
         answer: '',
         confidence: 0,
-        kbSources: []
+        kbSources: [],
       }
       return {
         ...q,
@@ -77,7 +89,7 @@ ${questions.map((q: any) => `Q${q.num}: ${q.text}${q.charLimit ? ` (${q.charLimi
         finalAnswer: draft.answer,
         confidence: draft.confidence,
         kbSources: draft.kbSources,
-        status: 'pending'
+        status: 'pending',
       }
     })
 

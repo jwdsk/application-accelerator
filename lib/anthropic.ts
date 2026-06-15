@@ -22,17 +22,19 @@ Always write in first person plural ("we", "our"). Be specific — use real numb
 ${kb.corrected.map(e => `Q: ${e.question}\nA: ${e.answer}\nSource: ${e.source}`).join('\n\n')}`)
   }
 
+  // Cap canned Q&As and doc excerpts to keep total prompt under ~4000 tokens
+  const cannedSlice = kb.canned.slice(0, 20)
   sections.push(`## TIER 2 — Company profile & canned Q&A
 
 ### Company profile
 ${Object.entries(kb.profile).map(([k, v]) => `${k}: ${v}`).join('\n')}
 
 ### Canned Q&A
-${kb.canned.map(e => `Q: ${e.question}\nA: ${e.answer}`).join('\n\n')}`)
+${cannedSlice.map(e => `Q: ${e.question}\nA: ${e.answer}`).join('\n\n')}`)
 
   if (kb.docs.length > 0) {
     sections.push(`## TIER 3 — Reference documents
-${kb.docs.map(d => `### ${d.title}\n${d.excerpt}`).join('\n\n')}`)
+${kb.docs.map(d => `### ${d.title}\n${d.excerpt.slice(0, 1500)}`).join('\n\n')}`)
   }
 
   return sections.join('\n\n---\n\n')
