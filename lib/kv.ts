@@ -105,6 +105,8 @@ export interface DocEntry {
   url: string
   text: string
   uploadedAt: string
+  size?: number
+  contentType?: string
 }
 
 export async function getDocs(): Promise<DocEntry[]> {
