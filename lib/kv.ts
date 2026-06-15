@@ -128,18 +128,47 @@ export async function deleteDoc(url: string): Promise<void> {
   await kv.set('doc:index', index.filter(u => u !== url))
 }
 
+// ─── KB Questions ─────────────────────────────────────────────────────────────
+
+export interface KBQuestion {
+  id: string
+  section: string
+  question: string
+  context: string
+  answer: string
+}
+
+export async function getKBQuestions(): Promise<KBQuestion[]> {
+  const questions = await kv.get<KBQuestion[]>('kb:questions')
+  return questions ?? []
+}
+
+export async function setKBQuestions(questions: KBQuestion[]): Promise<void> {
+  await kv.set('kb:questions', questions)
+}
+
+export async function updateKBAnswer(id: string, answer: string): Promise<void> {
+  const questions = await getKBQuestions()
+  const updated = questions.map(q => q.id === id ? { ...q, answer } : q)
+  await kv.set('kb:questions', updated)
+}
+
 // ─── Full KB for prompt ───────────────────────────────────────────────────────
 
 export async function getFullKB() {
-  const [corrected, canned, profile, docs] = await Promise.all([
+  const [corrected, canned, profile, docs, kbqs] = await Promise.all([
     getCorrected(),
     getCanned(),
     getProfile(),
     getDocs(),
+    getKBQuestions(),
   ])
+  const kbAnswered = kbqs
+    .filter(q => q.answer.trim())
+    .map(q => ({ question: q.question, answer: q.answer }))
   return {
     corrected,
-    canned,
+    canned: [...canned, ...kbAnswered],
     profile,
     docs: docs.map(d => ({ title: d.title, excerpt: d.text.slice(0, 3000) })),
   }
