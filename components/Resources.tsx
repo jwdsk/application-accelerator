@@ -14,13 +14,7 @@ type BlobFile = {
   contentType: string
 }
 
-type KBQuestion = {
-  id: string
-  section: string
-  question: string
-  context: string
-  answer: string
-}
+type CannedEntry = { question: string; answer: string }
 
 type Tab = 'documents' | 'kb' | 'profile'
 
@@ -77,16 +71,15 @@ export default function Resources() {
   const [uploadError, setUploadError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
 
-  // ── Knowledge Base ───────────────────────────────────────────────────────────
-  const [kbQuestions, setKbQuestions] = useState<KBQuestion[]>([])
-  const [kbLoading, setKbLoading] = useState(true)
-  const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
-  const [seedModalOpen, setSeedModalOpen] = useState(false)
-  const [seedFile, setSeedFile] = useState<File | null>(null)
-  const [seedLoading, setSeedLoading] = useState(false)
-  const [seedError, setSeedError] = useState('')
-  const [seedSuccess, setSeedSuccess] = useState<number | null>(null)
-  const csvRef = useRef<HTMLInputElement>(null)
+  // ── Canned Q&A ───────────────────────────────────────────────────────────────
+  const [canned, setCanned] = useState<CannedEntry[]>([])
+  const [cannedLoading, setCannedLoading] = useState(true)
+  const [newQ, setNewQ] = useState('')
+  const [newA, setNewA] = useState('')
+  const [cannedAdding, setCannedAdding] = useState(false)
+  const [editingIdx, setEditingIdx] = useState<number | null>(null)
+  const [editingAnswer, setEditingAnswer] = useState('')
+  const [editingSaving, setEditingSaving] = useState(false)
 
   // ── Company Profile ──────────────────────────────────────────────────────────
   const [profile, setProfile] = useState<Record<string, string>>({})
@@ -96,7 +89,7 @@ export default function Resources() {
 
   useEffect(() => {
     loadBlobs()
-    loadKBQuestions()
+    loadCanned()
     loadProfile()
   }, [])
 
@@ -112,14 +105,14 @@ export default function Resources() {
     setBlobsLoading(false)
   }
 
-  async function loadKBQuestions() {
-    setKbLoading(true)
+  async function loadCanned() {
+    setCannedLoading(true)
     try {
-      const res = await fetch('/api/kb/questions')
+      const res = await fetch('/api/kb?type=canned')
       const data = await res.json()
-      setKbQuestions(Array.isArray(data) ? data : [])
-    } catch { setKbQuestions([]) }
-    setKbLoading(false)
+      setCanned(Array.isArray(data) ? data : [])
+    } catch { setCanned([]) }
+    setCannedLoading(false)
   }
 
   async function loadProfile() {
@@ -166,51 +159,43 @@ export default function Resources() {
     await fetch(`/api/resources/documents?url=${encodeURIComponent(url)}`, { method: 'DELETE' })
   }
 
-  // ── KB actions ───────────────────────────────────────────────────────────────
+  // ── Canned Q&A actions ────────────────────────────────────────────────────────
 
-  function handleAnswerChange(id: string, answer: string) {
-    setKbQuestions(prev => prev.map(q => q.id === id ? { ...q, answer } : q))
-  }
-
-  async function handleAnswerBlur(id: string, answer: string) {
-    await fetch('/api/kb/questions', {
-      method: 'PATCH',
+  async function addCannedEntry() {
+    if (!newQ.trim() || !newA.trim()) return
+    setCannedAdding(true)
+    await fetch('/api/kb?type=canned', {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, answer }),
+      body: JSON.stringify({ question: newQ.trim(), answer: newA.trim() }),
     })
-    setSavedIds(prev => new Set([...prev, id]))
-    setTimeout(() => {
-      setSavedIds(prev => { const next = new Set(prev); next.delete(id); return next })
-    }, 2000)
+    setNewQ('')
+    setNewA('')
+    await loadCanned()
+    setCannedAdding(false)
   }
 
-  function openSeedModal() {
-    setSeedFile(null)
-    setSeedError('')
-    setSeedSuccess(null)
-    setSeedModalOpen(true)
+  async function deleteCannedEntry(idx: number) {
+    const filtered = canned.filter((_, i) => i !== idx)
+    setCanned(filtered)
+    await fetch('/api/kb?type=canned', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(filtered),
+    })
   }
 
-  async function handleSeedCSV() {
-    if (!seedFile) return
-    setSeedLoading(true)
-    setSeedError('')
-    const fd = new FormData()
-    fd.append('file', seedFile)
-    try {
-      const res = await fetch('/api/kb/questions/seed', { method: 'POST', body: fd })
-      const data = await res.json()
-      if (!res.ok) {
-        setSeedError(data.error || 'Seed failed.')
-      } else {
-        setSeedSuccess(data.seeded)
-        setSeedFile(null)
-        await loadKBQuestions()
-      }
-    } catch {
-      setSeedError('Upload failed. Please try again.')
-    }
-    setSeedLoading(false)
+  async function saveEditedAnswer(idx: number) {
+    setEditingSaving(true)
+    const updated = canned.map((e, i) => i === idx ? { ...e, answer: editingAnswer } : e)
+    setCanned(updated)
+    await fetch('/api/kb?type=canned', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updated),
+    })
+    setEditingIdx(null)
+    setEditingSaving(false)
   }
 
   // ── Profile actions ───────────────────────────────────────────────────────────
@@ -227,18 +212,6 @@ export default function Resources() {
     setTimeout(() => setProfileSaved(false), 2500)
   }
 
-  // ── KB grouping ───────────────────────────────────────────────────────────────
-
-  const kbSections = kbQuestions.reduce((acc, q) => {
-    if (!acc.has(q.section)) acc.set(q.section, [])
-    acc.get(q.section)!.push(q)
-    return acc
-  }, new Map<string, KBQuestion[]>())
-
-  const answeredCount = kbQuestions.filter(q => q.answer.trim()).length
-  const totalCount = kbQuestions.length
-  const progressPct = totalCount ? Math.round((answeredCount / totalCount) * 100) : 0
-
   // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
@@ -248,7 +221,7 @@ export default function Resources() {
         <nav className={styles.nav}>
           <Link href="/" className={styles.backLink}>← App</Link>
           <button className={`${styles.navBtn} ${tab === 'documents' ? styles.active : ''}`} onClick={() => setTab('documents')}>Documents</button>
-          <button className={`${styles.navBtn} ${tab === 'kb' ? styles.active : ''}`} onClick={() => setTab('kb')}>Knowledge Base</button>
+          <button className={`${styles.navBtn} ${tab === 'kb' ? styles.active : ''}`} onClick={() => setTab('kb')}>Canned Q&amp;A</button>
           <button className={`${styles.navBtn} ${tab === 'profile' ? styles.active : ''}`} onClick={() => setTab('profile')}>Company Profile</button>
         </nav>
       </header>
@@ -336,128 +309,86 @@ export default function Resources() {
           </div>
         )}
 
-        {/* ── TAB 2: Knowledge Base ────────────────────────────────────────── */}
+        {/* ── TAB 2: Canned Q&A ───────────────────────────────────────────── */}
         {tab === 'kb' && (
           <div>
-            <div className={styles.kbTopRow}>
-              <div>
-                <h2 className={styles.sectionTitle}>Knowledge Base</h2>
-                <p className={styles.sectionSub}>
-                  {kbLoading ? 'Loading…' : `${answeredCount} / ${totalCount} questions answered`}
-                </p>
-              </div>
-              <button className={styles.btnPrimary} onClick={openSeedModal}>Seed from CSV</button>
+            <div className={styles.sectionHead}>
+              <h2 className={styles.sectionTitle}>Canned Q&amp;A</h2>
+              <p className={styles.sectionSub}>
+                {cannedLoading ? 'Loading…' : `${canned.length} entr${canned.length === 1 ? 'y' : 'ies'} — used as Tier 2 context when drafting.`}
+              </p>
             </div>
 
-            {!kbLoading && totalCount > 0 && (
-              <div className={styles.progressWrap}>
-                <div className={styles.progressBar}>
-                  <div className={styles.progressFill} style={{ width: `${progressPct}%` }} />
-                </div>
-                <span className={styles.progressLabel}>{progressPct}%</span>
-              </div>
-            )}
-
-            {kbLoading ? (
+            {cannedLoading ? (
               <div className={styles.loading}>Loading…</div>
-            ) : totalCount === 0 ? (
-              <div className={styles.kbEmpty}>
-                <div className={styles.kbEmptyTitle}>No questions yet</div>
-                <p className={styles.kbEmptySub}>
-                  Upload a CSV with your knowledge base questions to get started.
-                  Each row should have a question (starting with a number like "1.") in column A and a context hint in column B.
-                </p>
-                <button className={styles.btnPrimary} onClick={openSeedModal}>Seed from CSV</button>
-              </div>
+            ) : canned.length === 0 ? (
+              <div className={styles.empty}>No canned entries yet. Add one below.</div>
             ) : (
-              <div className={styles.kbList}>
-                {Array.from(kbSections.entries()).map(([section, questions]) => (
-                  <div key={section} className={styles.kbSection}>
-                    <div className={styles.kbSectionHeader}>{section}</div>
-                    {questions.map(q => (
-                      <div
-                        key={q.id}
-                        className={`${styles.qCard} ${q.answer.trim() ? styles.qCardAnswered : styles.qCardEmpty}`}
-                      >
-                        <div className={styles.qText}>{q.question}</div>
-                        {q.context && <div className={styles.qContext}>{q.context}</div>}
-                        <div className={styles.qAnswerWrap}>
-                          <textarea
-                            className={styles.qTextarea}
-                            value={q.answer}
-                            placeholder="Type your answer…"
-                            rows={3}
-                            onChange={e => handleAnswerChange(q.id, e.target.value)}
-                            onBlur={e => handleAnswerBlur(q.id, e.target.value)}
-                          />
-                          {savedIds.has(q.id) && (
-                            <div className={styles.savedIndicator}>✓ Saved</div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+              <div className={styles.cannedList}>
+                {canned.map((entry, idx) => (
+                  <div key={idx} className={`${styles.cannedEntry} ${editingIdx === idx ? styles.cannedEntryEditing : ''}`}>
+                    <div className={styles.cannedActions}>
+                      {editingIdx === idx ? (
+                        <>
+                          <button className={styles.saveInlineBtn} onClick={() => saveEditedAnswer(idx)} disabled={editingSaving}>
+                            {editingSaving ? 'Saving…' : 'Save'}
+                          </button>
+                          <button className={styles.cancelBtn} onClick={() => setEditingIdx(null)}>Cancel</button>
+                        </>
+                      ) : (
+                        <>
+                          <button className={styles.editBtn} onClick={() => { setEditingIdx(idx); setEditingAnswer(entry.answer) }}>Edit</button>
+                          <button className={styles.deleteBtn} onClick={() => deleteCannedEntry(idx)}>Delete</button>
+                        </>
+                      )}
+                    </div>
+                    <div className={styles.cannedQ}>{entry.question}</div>
+                    {editingIdx === idx ? (
+                      <textarea
+                        className={styles.cannedEditTextarea}
+                        value={editingAnswer}
+                        onChange={e => setEditingAnswer(e.target.value)}
+                        rows={5}
+                        autoFocus
+                      />
+                    ) : (
+                      <div className={styles.cannedA}>{entry.answer}</div>
+                    )}
                   </div>
                 ))}
               </div>
             )}
 
-            {/* Seed CSV modal */}
-            {seedModalOpen && (
-              <div className={styles.modalOverlay} onClick={() => setSeedModalOpen(false)}>
-                <div className={styles.modal} onClick={e => e.stopPropagation()}>
-                  <div className={styles.modalTitle}>Seed from CSV</div>
-                  <p className={styles.modalSub}>
-                    Two-column CSV: question text in column A, context hint in column B.
-                    Question rows must start with a number (e.g. <em>1. What is MetaPause?</em>) or Q prefix (<em>Q1 Why now?</em>).
-                    Any row without that prefix becomes a section header.
-                  </p>
-
-                  {seedSuccess !== null ? (
-                    <div className={styles.seedSuccessBox}>
-                      <div className={styles.seedSuccessTitle}>✓ {seedSuccess} questions seeded</div>
-                      <button className={styles.btnPrimary} onClick={() => setSeedModalOpen(false)}>Done</button>
-                    </div>
-                  ) : (
-                    <>
-                      <div
-                        className={`${styles.modalDropZone} ${seedFile ? styles.hasFile : ''}`}
-                        onClick={() => csvRef.current?.click()}
-                        onDragOver={e => e.preventDefault()}
-                        onDrop={e => {
-                          e.preventDefault()
-                          const f = e.dataTransfer.files[0]
-                          if (f) { setSeedFile(f); setSeedError('') }
-                        }}
-                      >
-                        {seedFile ? (
-                          <span>
-                            {seedFile.name}{' '}
-                            <button className={styles.removeFile} onClick={e => { e.stopPropagation(); setSeedFile(null) }}>✕</button>
-                          </span>
-                        ) : (
-                          <span>Drop CSV here, or click to browse</span>
-                        )}
-                        <input ref={csvRef} type="file" accept=".csv" style={{ display: 'none' }}
-                          onChange={e => { if (e.target.files?.[0]) { setSeedFile(e.target.files[0]); setSeedError('') } }} />
-                      </div>
-
-                      {seedError && <div className={styles.alertError}>{seedError}</div>}
-
-                      <div className={styles.modalActions}>
-                        <button
-                          className={styles.btnPrimary}
-                          onClick={handleSeedCSV}
-                          disabled={!seedFile || seedLoading}
-                        >
-                          {seedLoading ? 'Seeding…' : 'Seed knowledge base'}
-                        </button>
-                        <button className={styles.btnSecondary} onClick={() => setSeedModalOpen(false)}>Cancel</button>
-                      </div>
-                    </>
-                  )}
-                </div>
+            <div className={styles.addForm}>
+              <div className={styles.addFormTitle}>Add entry</div>
+              <div className={styles.field}>
+                <label className={styles.label}>Question</label>
+                <input
+                  className={styles.input}
+                  type="text"
+                  placeholder="e.g. What problem are you solving?"
+                  value={newQ}
+                  onChange={e => setNewQ(e.target.value)}
+                />
               </div>
-            )}
+              <div className={styles.field}>
+                <label className={styles.label}>Answer</label>
+                <textarea
+                  className={styles.textarea}
+                  placeholder="Your canned answer…"
+                  value={newA}
+                  onChange={e => setNewA(e.target.value)}
+                  rows={4}
+                />
+              </div>
+              <button
+                className={styles.btnPrimary}
+                onClick={addCannedEntry}
+                disabled={cannedAdding || !newQ.trim() || !newA.trim()}
+              >
+                {cannedAdding ? 'Adding…' : '+ Add entry'}
+              </button>
+            </div>
           </div>
         )}
 

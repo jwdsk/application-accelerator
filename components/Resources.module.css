@@ -321,17 +321,92 @@
 .seedSuccessBox { text-align: center; padding: 20px 0 8px; }
 .seedSuccessTitle { font-size: 15px; font-weight: 500; color: var(--teal-text); margin-bottom: 16px; }
 
-/* ── addForm (kept for backward compat) ──────────────────────────────────────── */
-.addForm {
+/* ── Canned Q&A ──────────────────────────────────────────────────────────────── */
+.cannedList { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+
+.cannedEntry {
   background: var(--surface2);
-  border: .5px solid var(--border);
-  border-radius: var(--radius);
-  padding: 18px;
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  border: .5px solid transparent;
+}
+.cannedEntryEditing { border-color: var(--purple); background: var(--purple-bg); }
+
+.cannedActions { display: flex; gap: 6px; justify-content: flex-end; margin-bottom: 8px; }
+
+.cannedQ { font-size: 13px; font-weight: 500; margin-bottom: 5px; }
+.cannedA { font-size: 13px; color: var(--muted); line-height: 1.5; white-space: pre-wrap; }
+
+.cannedEditTextarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: .5px solid var(--purple);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  resize: vertical;
+  line-height: 1.5;
+  margin-top: 2px;
+  font-family: inherit;
+}
+.cannedEditTextarea:focus { outline: none; }
+
+.editBtn {
+  background: none;
+  border: .5px solid var(--border2);
+  color: var(--muted);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color .1s, border-color .1s;
+}
+.editBtn:hover { color: var(--purple-text); border-color: var(--purple); }
+
+.deleteBtn {
+  background: none;
+  border: .5px solid var(--border2);
+  color: var(--muted);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color .1s, border-color .1s;
+}
+.deleteBtn:hover { color: var(--red); border-color: var(--red); }
+
+.saveInlineBtn {
+  background: var(--purple);
+  color: white;
+  border: none;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 500;
+}
+.saveInlineBtn:disabled { opacity: .5; cursor: not-allowed; }
+
+.cancelBtn {
+  background: none;
+  border: .5px solid var(--border2);
+  color: var(--muted);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+/* ── Add form ────────────────────────────────────────────────────────────────── */
+.addForm {
+  border-top: .5px solid var(--border);
+  padding-top: 18px;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
-.addFormBtns { display: flex; gap: 8px; }
+.addFormTitle { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
 
 /* ── Company Profile ────────────────────────────────────────────────────────── */
 .profileGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
