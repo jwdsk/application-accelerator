@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { upload } from '@vercel/blob/client'
 import styles from './Resources.module.css'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -135,25 +136,20 @@ export default function Resources() {
 
   async function uploadDoc() {
     if (!uploadFile) return
-    const name = uploadFile.name
+    const file = uploadFile
     setUploadStage('processing')
     setUploadError('')
-    const fd = new FormData()
-    fd.append('file', uploadFile)
     try {
-      const res = await fetch('/api/resources/documents', { method: 'POST', body: fd })
-      if (!res.ok) {
-        const d = await res.json()
-        setUploadError(d.error || 'Upload failed.')
-        setUploadStage('error')
-      } else {
-        setUploadFile(null)
-        setUploadedName(name)
-        setUploadStage('done')
-        await loadBlobs()
-      }
-    } catch {
-      setUploadError('Upload failed. Please try again.')
+      await upload(file.name, file, {
+        access: 'public',
+        handleUploadUrl: '/api/resources/documents',
+      })
+      setUploadFile(null)
+      setUploadedName(file.name)
+      setUploadStage('done')
+      await loadBlobs()
+    } catch (err: any) {
+      setUploadError('Upload failed: ' + (err.message ?? 'Please try again.'))
       setUploadStage('error')
     }
   }
