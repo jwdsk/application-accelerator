@@ -35,7 +35,7 @@ ${questions.map((q: any) => `Q${q.num}: ${q.text}${q.charLimit ? ` (${q.charLimi
 
     // Single call: sends the system prompt once for all questions.
     // Retry up to 2 times on 429, honouring the retry-after header.
-    let response: Awaited<ReturnType<typeof anthropic.chat.completions.create>> | undefined
+    let response: any
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         response = await anthropic.chat.completions.create({

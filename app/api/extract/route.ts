@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     // 3. Extract and structure the questions.
     // Limit text slice and output tokens to stay within the 12k TPM budget
     // shared with the subsequent /api/draft call (~7500 tokens).
-    let response: Awaited<ReturnType<typeof anthropic.chat.completions.create>> | undefined
+    let response: any
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         response = await anthropic.chat.completions.create({
