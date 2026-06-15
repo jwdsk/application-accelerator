@@ -41,14 +41,15 @@ export async function POST(request: Request): Promise<Response> {
       const { extractFromBuffer } = await import('@/lib/extract')
       try {
         const res = await fetch(blob.url)
-        const buffer = Buffer.from(await res.arrayBuffer())
+        const arrayBuffer = await res.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
         const { text } = await extractFromBuffer(buffer, blob.pathname)
         await addDoc({
           title: blob.pathname,
           url: blob.url,
           text: text ?? '',
           uploadedAt: new Date().toISOString(),
-          size: blob.size,
+          size: arrayBuffer.byteLength,
           contentType: blob.contentType,
         })
       } catch (e) {
