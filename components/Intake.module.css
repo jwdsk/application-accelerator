@@ -1,0 +1,22 @@
+.wrap { max-width: 640px; }
+.title { font-size: 20px; font-weight: 500; margin-bottom: 4px; }
+.sub { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+.field { margin-bottom: 14px; }
+.label { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .04em; }
+.input { width: 100%; padding: 10px 12px; border: 0.5px solid var(--border2); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-size: 13px; }
+.input:focus { outline: none; border-color: var(--purple); }
+.input:disabled { opacity: 0.5; }
+.orDivider { text-align: center; color: var(--hint); font-size: 12px; margin: 16px 0; position: relative; }
+.orDivider::before, .orDivider::after { content:''; position:absolute; top:50%; width:44%; height:.5px; background:var(--border2); }
+.orDivider::before { left:0; } .orDivider::after { right:0; }
+.dropZone { border: 1.5px dashed var(--border2); border-radius: var(--radius); padding: 24px; text-align: center; cursor: pointer; color: var(--muted); font-size: 13px; margin-bottom: 16px; transition: border-color .15s, background .15s; }
+.dropZone:hover { border-color: var(--purple); background: var(--purple-bg); }
+.hasFile { border-color: var(--teal); background: var(--teal-bg); color: var(--teal-text); }
+.removeFile { background: none; border: none; color: var(--muted); margin-left: 8px; font-size: 12px; cursor: pointer; }
+.alertInfo { background: var(--purple-bg); color: var(--purple-text); padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.alertWarn { background: var(--amber-bg); color: var(--amber-text); padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 14px; }
+.alertError { background: var(--red-bg); color: var(--red); padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 14px; }
+.btnPrimary { background: var(--purple); color: white; border: none; padding: 11px 22px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; }
+.btnPrimary:disabled { opacity: .5; cursor: not-allowed; }
+.spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid rgba(83,74,183,.3); border-top-color: var(--purple); border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }

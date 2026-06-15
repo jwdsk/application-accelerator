@@ -1,0 +1,41 @@
+.wrap {}
+.topBar { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+.title { font-size: 18px; font-weight: 500; }
+.sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.stats { display: flex; gap: 20px; background: var(--surface); border: .5px solid var(--border); border-radius: var(--radius); padding: 14px 20px; margin-bottom: 20px; }
+.stat { display: flex; flex-direction: column; gap: 2px; }
+.statNum { font-size: 22px; font-weight: 500; }
+.statLabel { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.pct { color: var(--purple); }
+.qList { display: flex; flex-direction: column; gap: 12px; }
+.qCard { background: var(--surface); border: .5px solid var(--border); border-radius: var(--radius); padding: 16px; }
+.cardApproved { border-color: var(--teal); }
+.cardFlagged { border-color: var(--amber); }
+.qTop { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.qMeta { display: flex; gap: 8px; align-items: center; }
+.qNum { font-size: 12px; font-weight: 600; color: var(--purple); }
+.qCat { font-size: 11px; background: var(--purple-bg); color: var(--purple-text); padding: 2px 8px; border-radius: 10px; }
+.qLimit { font-size: 11px; background: var(--amber-bg); color: var(--amber-text); padding: 2px 8px; border-radius: 10px; }
+.qStatus { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 5px; text-transform: capitalize; }
+.dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; }
+.dot_pending { background: var(--amber); }
+.dot_approved { background: var(--teal); }
+.dot_flagged { background: var(--red); }
+.qText { font-size: 13px; font-weight: 500; margin-bottom: 10px; }
+.confRow { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.confLabel { font-size: 11px; color: var(--hint); min-width: 70px; }
+.confBar { flex: 1; height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; }
+.confFill { height: 100%; border-radius: 2px; transition: width .3s; }
+.confPct { font-size: 11px; color: var(--muted); min-width: 28px; text-align: right; }
+.answer { width: 100%; padding: 10px 12px; border: .5px solid var(--border2); border-radius: var(--radius-sm); background: var(--surface2); color: var(--text); font-size: 13px; line-height: 1.65; resize: vertical; }
+.answer:focus { outline: none; border-color: var(--purple); background: var(--surface); }
+.charCount { font-size: 11px; color: var(--hint); text-align: right; margin-top: 3px; }
+.charOver { color: var(--red); }
+.revertBtn { background: none; border: none; color: var(--muted); font-size: 12px; margin-top: 4px; padding: 0; text-decoration: underline; }
+.qActions { display: flex; gap: 8px; margin-top: 10px; }
+.btnApprove { background: var(--teal-bg); color: var(--teal-text); border: none; padding: 6px 12px; border-radius: 5px; font-size: 12px; }
+.btnFlag { background: var(--amber-bg); color: var(--amber-text); border: none; padding: 6px 12px; border-radius: 5px; font-size: 12px; }
+.btnSecondary { background: none; border: .5px solid var(--border2); color: var(--text); padding: 8px 14px; border-radius: var(--radius-sm); font-size: 13px; }
+.btnLearn { background: var(--purple); color: white; border: none; padding: 8px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; }
+.footer { display: flex; justify-content: space-between; margin-top: 24px; padding-top: 20px; border-top: .5px solid var(--border); }
