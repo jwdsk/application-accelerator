@@ -1,13 +1,10 @@
 import Anthropic from '@anthropic-ai/sdk'
 
 export const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY
+  apiKey: process.env.GROQ_API_KEY!,
+  baseURL: 'https://api.groq.com/openai/v1',
 })
 
-// Builds the KB system prompt from all three tiers
-// Tier 1: past corrected applications (highest weight)
-// Tier 2: canned Q&A + company profile
-// Tier 3: uploaded documents
 export function buildSystemPrompt(kb: {
   corrected: { question: string; answer: string; source: string }[]
   canned: { question: string; answer: string }[]
@@ -21,9 +18,7 @@ export function buildSystemPrompt(kb: {
 Always write in first person plural ("we", "our"). Be specific — use real numbers and named examples from the knowledge base. Never fabricate metrics or claims not supported by the KB. If the KB doesn't cover something, say so clearly rather than inventing.`)
 
   if (kb.corrected.length > 0) {
-    sections.push(`## TIER 1 — Past corrected application answers (use these first, they are the best source)
-These are answers MetaPause has written and approved for real applications. When a new question is similar, lead with this style and content.
-
+    sections.push(`## TIER 1 — Past corrected application answers (use these first)
 ${kb.corrected.map(e => `Q: ${e.question}\nA: ${e.answer}\nSource: ${e.source}`).join('\n\n')}`)
   }
 

@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
 
     // 3. Use Claude Haiku to extract and structure the questions
     const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: 'llama-3.3-70b-versatile',
       max_tokens: 2000,
       messages: [{
         role: 'user',

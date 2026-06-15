@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     // Draft all questions in one call for efficiency + prompt caching
     // Sonnet handles the drafting — quality matters here
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: 'llama-3.3-70b-versatile',
       max_tokens: 4000,
       system: systemPrompt,
       messages: [{
