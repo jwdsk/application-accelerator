@@ -72,6 +72,7 @@ export default function Resources() {
   const fileRef = useRef<HTMLInputElement>(null)
   const [reindexState, setReindexState] = useState<'idle' | 'running' | 'done' | 'error'>('idle')
   const [reindexMsg, setReindexMsg] = useState('')
+  const [reindexErrors, setReindexErrors] = useState<string[]>([])
 
   // ── Canned Q&A ───────────────────────────────────────────────────────────────
   const [canned, setCanned] = useState<CannedEntry[]>([])
@@ -159,12 +160,14 @@ export default function Resources() {
   async function reindexDocs() {
     setReindexState('running')
     setReindexMsg('')
+    setReindexErrors([])
     try {
       const res = await fetch('/api/resources/documents/reindex', { method: 'POST' })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Reindex failed')
       setReindexMsg(data.message)
-      setReindexState('done')
+      setReindexErrors(data.errors ?? [])
+      setReindexState(data.errors?.length > 0 ? 'error' : 'done')
       await loadBlobs()
     } catch (err: any) {
       setReindexMsg(err.message ?? 'Reindex failed')
@@ -266,6 +269,11 @@ export default function Resources() {
                   <div className={reindexState === 'error' ? styles.reindexMsgError : styles.reindexMsg}>
                     {reindexMsg}
                   </div>
+                )}
+                {reindexErrors.length > 0 && (
+                  <ul className={styles.reindexErrorList}>
+                    {reindexErrors.map((e, i) => <li key={i}>{e}</li>)}
+                  </ul>
                 )}
               </div>
             </div>

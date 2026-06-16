@@ -30,32 +30,38 @@ export async function POST() {
     for (const blob of unindexed) {
       try {
         const res = await fetch(blob.url, { signal: AbortSignal.timeout(20_000) })
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        if (!res.ok) throw new Error(`fetch failed: HTTP ${res.status} from ${blob.url}`)
         const arrayBuffer = await res.arrayBuffer()
         const buffer = Buffer.from(arrayBuffer)
-        const { text, error } = await extractFromBuffer(buffer, blob.pathname)
-        if (!text) throw new Error(error ?? 'No text extracted')
+        const { text, error: extractErr } = await extractFromBuffer(buffer, blob.pathname)
+        // Index even if extraction yields no text (matches onUploadCompleted behaviour).
+        // Record extraction failure as a warning, not a hard error.
+        if (extractErr) errors.push(`${blob.pathname}: extraction warning — ${extractErr}`)
         await addDoc({
           title: blob.pathname,
           url: blob.url,
-          text,
+          text: text ?? '',
           uploadedAt: blob.uploadedAt.toISOString(),
           size: blob.size,
           contentType: guessContentType(blob.pathname),
         })
         indexed++
       } catch (e: any) {
+        console.error('Reindex item failed:', blob.pathname, e)
         errors.push(`${blob.pathname}: ${e.message}`)
       }
     }
+
+    const hardErrors = errors.filter(e => !e.includes('extraction warning'))
+    const msg = hardErrors.length > 0
+      ? `Indexed ${indexed} of ${unindexed.length} files. ${hardErrors.length} failed.`
+      : `Indexed ${indexed} file${indexed === 1 ? '' : 's'}.`
 
     return NextResponse.json({
       indexed,
       total: unindexed.length,
       errors,
-      message: indexed === unindexed.length
-        ? `Indexed ${indexed} file${indexed === 1 ? '' : 's'}.`
-        : `Indexed ${indexed} of ${unindexed.length} files. ${errors.length} failed.`,
+      message: msg,
     })
   } catch (err: any) {
     console.error('Reindex error:', err)
