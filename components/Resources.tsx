@@ -70,6 +70,8 @@ export default function Resources() {
   const [uploadedName, setUploadedName] = useState('')
   const [uploadError, setUploadError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
+  const [reindexState, setReindexState] = useState<'idle' | 'running' | 'done' | 'error'>('idle')
+  const [reindexMsg, setReindexMsg] = useState('')
 
   // ── Canned Q&A ───────────────────────────────────────────────────────────────
   const [canned, setCanned] = useState<CannedEntry[]>([])
@@ -154,6 +156,22 @@ export default function Resources() {
     setUploadedName('')
   }
 
+  async function reindexDocs() {
+    setReindexState('running')
+    setReindexMsg('')
+    try {
+      const res = await fetch('/api/resources/documents/reindex', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Reindex failed')
+      setReindexMsg(data.message)
+      setReindexState('done')
+      await loadBlobs()
+    } catch (err: any) {
+      setReindexMsg(err.message ?? 'Reindex failed')
+      setReindexState('error')
+    }
+  }
+
   async function deleteBlob(url: string) {
     setBlobs(prev => prev.filter(b => b.url !== url))
     await fetch(`/api/resources/documents?url=${encodeURIComponent(url)}`, { method: 'DELETE' })
@@ -231,9 +249,25 @@ export default function Resources() {
         {/* ── TAB 1: Documents ────────────────────────────────────────────── */}
         {tab === 'documents' && (
           <div>
-            <div className={styles.sectionHead}>
-              <h2 className={styles.sectionTitle}>Documents</h2>
-              <p className={styles.sectionSub}>Upload PDFs, Word docs, and text files to your knowledge base.</p>
+            <div className={styles.docHeader}>
+              <div>
+                <h2 className={styles.sectionTitle}>Documents</h2>
+                <p className={styles.sectionSub}>Upload PDFs, Word docs, and text files to your knowledge base.</p>
+              </div>
+              <div className={styles.reindexWrap}>
+                <button
+                  className={styles.btnReindex}
+                  onClick={reindexDocs}
+                  disabled={reindexState === 'running'}
+                >
+                  {reindexState === 'running' ? <><span className={styles.spinner} /> Indexing…</> : 'Re-index'}
+                </button>
+                {reindexMsg && (
+                  <div className={reindexState === 'error' ? styles.reindexMsgError : styles.reindexMsg}>
+                    {reindexMsg}
+                  </div>
+                )}
+              </div>
             </div>
 
             {uploadStage === 'done' ? (
