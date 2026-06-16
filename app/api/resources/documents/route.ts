@@ -53,37 +53,8 @@ export async function POST(request: Request): Promise<Response> {
       ],
       maximumSizeInBytes: 50 * 1024 * 1024,
     }),
-    onUploadCompleted: async ({ blob }) => {
-      const { addDoc } = await import('@/lib/kv')
-      const { extractFromBuffer } = await import('@/lib/extract')
-      try {
-        const timeout = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('onUploadCompleted timed out after 45s')), 45_000)
-        )
-        await Promise.race([
-          (async () => {
-            const res = await fetch(blob.url, {
-              signal: AbortSignal.timeout(20_000),
-              headers: { authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` },
-            })
-            const arrayBuffer = await res.arrayBuffer()
-            const buffer = Buffer.from(arrayBuffer)
-            const { text } = await extractFromBuffer(buffer, blob.pathname)
-            await addDoc({
-              title: blob.pathname,
-              url: blob.url,
-              text: text ?? '',
-              uploadedAt: new Date().toISOString(),
-              size: arrayBuffer.byteLength,
-              contentType: blob.contentType,
-            })
-          })(),
-          timeout,
-        ])
-      } catch (e) {
-        console.error('Text extraction failed:', e)
-      }
-    },
+    // Extraction is handled by the client via /index-content after upload completes.
+    onUploadCompleted: async () => {},
   })
   return Response.json(jsonResponse)
 }

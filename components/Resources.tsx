@@ -136,10 +136,14 @@ export default function Resources() {
     setUploadStage('processing')
     setUploadError('')
     try {
-      await upload(file.name, file, {
+      const blob = await upload(file.name, file, {
         access: 'public',
         handleUploadUrl: '/api/resources/documents',
       })
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('url', blob.url)
+      await fetch('/api/resources/documents/index-content', { method: 'POST', body: fd })
       setUploadFile(null)
       setUploadedName(file.name)
       setUploadStage('done')
