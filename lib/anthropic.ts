@@ -17,13 +17,13 @@ export function buildSystemPrompt(kb: {
 
 Always write in first person plural ("we", "our"). Be specific — use real numbers and named examples from the knowledge base. Never fabricate metrics or claims not supported by the KB. If the KB doesn't cover something, say so clearly rather than inventing.`)
 
+  // Cap all tiers to keep system prompt under ~3000 tokens, leaving room for the response
   if (kb.corrected.length > 0) {
     sections.push(`## TIER 1 — Past corrected application answers (use these first)
-${kb.corrected.map(e => `Q: ${e.question}\nA: ${e.answer}\nSource: ${e.source}`).join('\n\n')}`)
+${kb.corrected.slice(0, 6).map(e => `Q: ${e.question}\nA: ${e.answer}\nSource: ${e.source}`).join('\n\n')}`)
   }
 
-  // Cap canned Q&As and doc excerpts to keep total prompt under ~4000 tokens
-  const cannedSlice = kb.canned.slice(0, 20)
+  const cannedSlice = kb.canned.slice(0, 10)
   sections.push(`## TIER 2 — Company profile & canned Q&A
 
 ### Company profile
@@ -34,7 +34,7 @@ ${cannedSlice.map(e => `Q: ${e.question}\nA: ${e.answer}`).join('\n\n')}`)
 
   if (kb.docs.length > 0) {
     sections.push(`## TIER 3 — Reference documents
-${kb.docs.map(d => `### ${d.title}\n${d.excerpt.slice(0, 1500)}`).join('\n\n')}`)
+${kb.docs.slice(0, 3).map(d => `### ${d.title}\n${d.excerpt.slice(0, 600)}`).join('\n\n')}`)
   }
 
   return sections.join('\n\n---\n\n')

@@ -62,17 +62,44 @@ ${questions.map((q: any) => `Q${q.num}: ${q.text}${q.charLimit ? ` (${q.charLimi
       .trim()
 
     let drafts: any[] = []
+    // Try 1: parse the whole response as a JSON array
     try {
       drafts = JSON.parse(raw)
     } catch {
-      // Fallback: extract individual JSON objects in case the array is truncated
-      const matches = [...raw.matchAll(/\{[\s\S]*?\}/g)]
-      for (const m of matches) {
-        try { drafts.push(JSON.parse(m[0])) } catch { /* skip malformed */ }
+      // Try 2: find the outermost [...] and parse that slice
+      const start = raw.indexOf('[')
+      const end = raw.lastIndexOf(']')
+      if (start !== -1 && end > start) {
+        try { drafts = JSON.parse(raw.slice(start, end + 1)) } catch { /* fall through */ }
+      }
+    }
+
+    // Try 3: walk the string tracking brace depth — handles truncated arrays
+    if (drafts.length === 0) {
+      let i = raw.indexOf('{')
+      while (i !== -1) {
+        let depth = 0, inStr = false, esc = false, j = i
+        for (; j < raw.length; j++) {
+          const c = raw[j]
+          if (esc) { esc = false; continue }
+          if (c === '\\' && inStr) { esc = true; continue }
+          if (c === '"') { inStr = !inStr; continue }
+          if (inStr) continue
+          if (c === '{') depth++
+          if (c === '}' && --depth === 0) break
+        }
+        if (depth === 0 && j < raw.length) {
+          try {
+            const obj = JSON.parse(raw.slice(i, j + 1))
+            if (obj.num !== undefined && obj.answer !== undefined) drafts.push(obj)
+          } catch { /* malformed, skip */ }
+        }
+        i = raw.indexOf('{', j + 1)
       }
     }
 
     if (drafts.length === 0) {
+      console.error('Draft parse failed. Groq raw response:', raw.slice(0, 600))
       return NextResponse.json({ error: 'Draft generation failed. Please try again.' }, { status: 422 })
     }
 
