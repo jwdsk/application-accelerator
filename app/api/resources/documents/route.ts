@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { handleUpload, type HandleUploadBody } from '@vercel/blob/client'
-import { list, del } from '@vercel/blob'
-import { deleteDoc, getDocs } from '@/lib/kv'
+import { put, list, del } from '@vercel/blob'
+import { addDoc, deleteDoc, getDocs } from '@/lib/kv'
+import { extractFromBuffer } from '@/lib/extract'
 
 export const maxDuration = 60
 
@@ -39,24 +39,40 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request): Promise<Response> {
-  const body = (await request.json()) as HandleUploadBody
-  const jsonResponse = await handleUpload({
-    body,
-    request,
-    onBeforeGenerateToken: async (_pathname) => ({
-      allowedContentTypes: [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'text/plain',
-      ],
-      maximumSizeInBytes: 50 * 1024 * 1024,
-    }),
-    // Extraction is handled by the client via /index-content after upload completes.
-    onUploadCompleted: async () => {},
-  })
-  return Response.json(jsonResponse)
+export async function POST(req: NextRequest): Promise<Response> {
+  try {
+    const formData = await req.formData()
+    const file = formData.get('file') as File | null
+    if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+
+    const allowed = ['application/pdf', 'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain']
+    if (!allowed.includes(file.type) && !file.name.match(/\.(pdf|doc|docx|txt)$/i)) {
+      return NextResponse.json({ error: 'Unsupported file type' }, { status: 400 })
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer())
+
+    // Extract text before uploading — buffer already in memory, no CDN fetch needed
+    const { text } = await extractFromBuffer(buffer, file.name)
+
+    // Upload to Blob with public access so Re-index can fetch it if needed
+    const blob = await put(file.name, buffer, { access: 'public', addRandomSuffix: false })
+
+    await addDoc({
+      title: file.name,
+      url: blob.url,
+      text: text ?? '',
+      uploadedAt: new Date().toISOString(),
+      size: buffer.byteLength,
+      contentType: file.type || blob.contentType,
+    })
+
+    return NextResponse.json({ url: blob.url, extracted: !!text })
+  } catch (err: any) {
+    console.error('Upload error:', err)
+    return NextResponse.json({ error: err.message }, { status: 500 })
+  }
 }
 
 export async function DELETE(req: NextRequest) {

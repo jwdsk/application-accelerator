@@ -1,7 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { upload } from '@vercel/blob/client'
 import styles from './Resources.module.css'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -136,21 +135,17 @@ export default function Resources() {
     setUploadStage('processing')
     setUploadError('')
     try {
-      const blob = await upload(file.name, file, {
-        access: 'public',
-        handleUploadUrl: '/api/resources/documents',
-      })
       const fd = new FormData()
       fd.append('file', file)
-      fd.append('url', blob.url)
-      await fetch('/api/resources/documents/index-content', {
+      const res = await fetch('/api/resources/documents', {
         method: 'POST',
         body: fd,
-        signal: AbortSignal.timeout(30_000),
-      }).catch(() => {
-        // Extraction timed out or failed — file is in Blob storage,
-        // KV index will be incomplete but Re-index can fix it later.
+        signal: AbortSignal.timeout(55_000),
       })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error ?? `Server error ${res.status}`)
+      }
       setUploadFile(null)
       setUploadedName(file.name)
       setUploadStage('done')
