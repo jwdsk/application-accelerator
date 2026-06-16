@@ -143,7 +143,14 @@ export default function Resources() {
       const fd = new FormData()
       fd.append('file', file)
       fd.append('url', blob.url)
-      await fetch('/api/resources/documents/index-content', { method: 'POST', body: fd })
+      await fetch('/api/resources/documents/index-content', {
+        method: 'POST',
+        body: fd,
+        signal: AbortSignal.timeout(30_000),
+      }).catch(() => {
+        // Extraction timed out or failed — file is in Blob storage,
+        // KV index will be incomplete but Re-index can fix it later.
+      })
       setUploadFile(null)
       setUploadedName(file.name)
       setUploadStage('done')

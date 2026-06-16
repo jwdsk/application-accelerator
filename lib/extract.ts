@@ -61,12 +61,16 @@ export async function scrapeUrl(url: string): Promise<{ text: string; error?: st
 
 export async function extractPdf(buffer: Buffer): Promise<{ text: string; error?: string }> {
   try {
-    // Dynamic import — pdf-parse has side effects at module level
-   // @ts-ignore
+    // @ts-ignore
     const pdfParse = (await import('pdf-parse')).default
-    const data = await pdfParse(buffer)
+    const data = await Promise.race([
+      pdfParse(buffer),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('PDF parsing timed out after 20s')), 20_000)
+      ),
+    ])
     if (!data.text || data.text.trim().length < 50) {
-      return { text: '', error: 'PDF appears to be scanned or image-only. Please paste the questions as text.' }
+      return { text: '', error: 'PDF appears to be scanned or image-only.' }
     }
     return { text: data.text.trim() }
   } catch (err: any) {
