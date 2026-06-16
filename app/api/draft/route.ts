@@ -17,10 +17,7 @@ export async function POST(req: NextRequest) {
 
     const userMessage = `Draft answers for all ${questions.length} questions in this application: "${appName || 'Accelerator Application'}".
 
-Return ONLY a valid JSON object with a "drafts" key containing an array. No preamble, no markdown fences:
-{"drafts": [...]}
-
-Each item in the array:
+Return ONLY a valid JSON array, no preamble, no markdown fences. Each item:
 {
   "num": 1,
   "answer": "your drafted answer",
@@ -44,9 +41,6 @@ ${questions.map((q: any) => `Q${q.num}: ${q.text}${q.charLimit ? ` (${q.charLimi
         response = await anthropic.chat.completions.create({
           model: 'llama-3.3-70b-versatile',
           max_tokens: 4000,
-          temperature: 0,
-          // @ts-ignore — Groq supports json_object for this model
-          response_format: { type: 'json_object' },
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userMessage },
@@ -63,19 +57,18 @@ ${questions.map((q: any) => `Q${q.num}: ${q.text}${q.charLimit ? ` (${q.charLimi
       }
     }
 
-    const raw = (response?.choices[0]?.message?.content ?? '').trim()
+    const raw = (response?.choices[0]?.message?.content ?? '')
+      .replace(/```json\n?|```/g, '')
+      .trim()
 
     let drafts: any[] = []
     try {
-      // response_format:json_object always returns an object — unwrap the drafts array
-      const parsed = JSON.parse(raw)
-      drafts = Array.isArray(parsed) ? parsed : (parsed.drafts ?? parsed.answers ?? Object.values(parsed))
+      drafts = JSON.parse(raw)
     } catch {
-      // Fallback: find the outermost [...] in case model wrapped in extra text
-      const start = raw.indexOf('[')
-      const end = raw.lastIndexOf(']')
-      if (start !== -1 && end > start) {
-        try { drafts = JSON.parse(raw.slice(start, end + 1)) } catch { /* give up */ }
+      // Fallback: extract individual JSON objects in case the array is truncated
+      const matches = [...raw.matchAll(/\{[\s\S]*?\}/g)]
+      for (const m of matches) {
+        try { drafts.push(JSON.parse(m[0])) } catch { /* skip malformed */ }
       }
     }
 
