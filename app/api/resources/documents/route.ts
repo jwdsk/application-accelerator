@@ -62,7 +62,10 @@ export async function POST(request: Request): Promise<Response> {
         )
         await Promise.race([
           (async () => {
-            const res = await fetch(blob.url, { signal: AbortSignal.timeout(20_000) })
+            const res = await fetch(blob.url, {
+              signal: AbortSignal.timeout(20_000),
+              headers: { authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` },
+            })
             const arrayBuffer = await res.arrayBuffer()
             const buffer = Buffer.from(arrayBuffer)
             const { text } = await extractFromBuffer(buffer, blob.pathname)

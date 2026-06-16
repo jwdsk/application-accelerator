@@ -29,8 +29,11 @@ export async function POST() {
 
     for (const blob of unindexed) {
       try {
-        const res = await fetch(blob.url, { signal: AbortSignal.timeout(20_000) })
-        if (!res.ok) throw new Error(`fetch failed: HTTP ${res.status} from ${blob.url}`)
+        const res = await fetch(blob.url, {
+          signal: AbortSignal.timeout(20_000),
+          headers: { authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` },
+        })
+        if (!res.ok) throw new Error(`fetch failed: HTTP ${res.status}`)
         const arrayBuffer = await res.arrayBuffer()
         const buffer = Buffer.from(arrayBuffer)
         const { text, error: extractErr } = await extractFromBuffer(buffer, blob.pathname)
